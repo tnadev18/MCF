@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function AddCamp() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [formData, setFormData] = useState({
     camp_name: '',
@@ -11,12 +13,18 @@ function AddCamp() {
     camp_place: '',
     camp_fee: '',
     camp_description: '',
-    fee_discount: '',
+    fee_discount: '0',
     // discount_date: '',
     final_fee: '',
-    camp_status: '',
+    camp_status: 'Inactive',
   });
 
+  useEffect(() => {
+    setFormData((prevData) => ({
+      ...prevData,
+      final_fee: (parseInt(formData.camp_fee) - parseInt(formData.fee_discount)) ? `${(parseInt(formData.camp_fee) - parseInt(formData.fee_discount))}` : '0',
+    }));
+  }, [formData.camp_fee, formData.fee_discount])
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -31,35 +39,36 @@ function AddCamp() {
       camp_status: prevData.camp_status === 'Active' ? 'Inactive' : 'Active',
     }));
   };
-
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     // Convert date to yyyy-mm-dd format
     // const formattedDiscountDate = convertDate(formData.discount_date);
 
     try {
       const form = new FormData();
-      // for (const key in formData) {
-      //   form.append(key, key === 'discount_date' ? formattedDiscountDate : formData[key]);
-      // }
-
-      const response = await fetch('https://mcfapis.bnbdevelopers.in/addCamp', {
-        method: 'POST',
-        body: form,
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok) {
-        console.log('Camp added successfully!');
-        alert('Camp added successfully!');
-        window.location.href = '/camp';
-      } else {
-        console.error('Failed to add camp:', responseData.error);
-        alert('Failed to add camp. Check console for details.');
+      for (const key in formData) {
+        form.append(key, key === 'discount_date' ? formattedDiscountDate : formData[key]);
       }
+
+      const response = await axios.post('https://mcfapis.bnbdevelopers.in/addCamp', form);
+
+      // const responseData = await response.json();
+      setLoading(false);
+
+      // if (response.ok) {
+      console.log('Camp added successfully!');
+      alert('Camp added successfully!');
+      navigate('/camp');
+
+      // } else {
+      // console.error('Failed to add camp:', responseData.error);
+      // alert('Failed to add camp. Check console for details.');
+      // }
     } catch (error) {
+      setLoading(false);
       console.error('Error:', error);
       alert('An error occurred. Check console for details.');
     }
@@ -170,7 +179,7 @@ function AddCamp() {
                     type="text"
                     name="final_fee"
                     value={formData.final_fee}
-                    onChange={handleChange}
+                    // onChange={handleChange}
                     required
                     className="w-full p-3 border rounded-lg text-gray-800 focus:ring focus:ring-blue-400"
                   />
@@ -190,7 +199,7 @@ function AddCamp() {
                     type="submit"
                     className="w-32 p-3 mt-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-400"
                   >
-                    Submit
+                    {loading ? 'Adding...' : 'Add'}
                   </button>
                 </form>
               </div>

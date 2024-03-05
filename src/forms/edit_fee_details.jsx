@@ -15,7 +15,7 @@ function EditFeeDetails() {
     fee_discount: "",
     // discount_date: "",
     final_fee: "",
-    camp_status: false,
+    camp_status: "inactive",
   });
   const [campName, setCampName] = useState("");
 
@@ -67,10 +67,14 @@ function EditFeeDetails() {
     });
   };
 
+  useEffect(()=>{
+    console.log(formData)
+  },[formData])
+
   const handleCheckboxChange = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      camp_status: prevFormData.camp_status === "Active" ? false : "Active",
+      camp_status: prevFormData.camp_status === "Active" ? "inactive" : "active",
     }));
   };
 
@@ -81,20 +85,19 @@ function EditFeeDetails() {
     // const formattedDiscountDate = convertDate(formData.discount_date);
 
     try {
-      const formDataToSend = new URLSearchParams();
+      const formDataToSend = new FormData(e.target);
 
       // for (const key in formData) {
       //   formDataToSend.append(key, key === 'discount_date' ? formattedDiscountDate : formData[key]);
       // }
+      formDataToSend.append("camp_id", formData.camp_id);
 
       const response = await fetch(
         `https://mcfapis.bnbdevelopers.in/updateCamp`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: formDataToSend.toString(),
+
+          body: formDataToSend,
         }
       );
 
@@ -234,7 +237,7 @@ function EditFeeDetails() {
                     <input
                       type="checkbox"
                       name="camp_status"
-                      checked={formData.camp_status === "Active"}
+                      checked={formData.camp_status === "active"}
                       onChange={handleCheckboxChange}
                       className="text-blue-500 focus:ring focus:ring-blue-400"
                     />
